@@ -1,5 +1,4 @@
 import cv2 as cv
-from Apriltagging import AprilTagging
 import math
 import time
 

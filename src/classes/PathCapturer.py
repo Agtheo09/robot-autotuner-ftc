@@ -6,7 +6,7 @@ class PathCapturer:
     captureEnabled = False
     experimentName = ""
 
-    datalogger = Datalogger()
+    # datalogger = Datalogger()
     
     def __init__(self, experimentName):
         self.experimentName = experimentName
@@ -19,7 +19,7 @@ class PathCapturer:
 
     def stopCapturing(self):
         self.captureEnabled = False
-        self.datalogger.saveExpFile(self.experimentName, self.path)
+        # self.datalogger.saveExpFile(self.experimentName, self.path)
         self.path = np.array([])
  
     def update(self, point):            
