@@ -2,7 +2,7 @@ import cv2 as cv
 import numpy as np
 from pupil_apriltags import Detector
 
-cap = cv.VideoCapture(0)
+cap = cv.VideoCapture(1)
 if not cap.isOpened():
     print("Cannot open camera")
     exit()
@@ -50,15 +50,29 @@ def perspectiveRevert(frame, april1, april2, april3, april4):
     rows, cols, ch = frame.shape
 
     pts1 = np.float32([april1, april2, april3, april4])
-    pts2 = np.float32([[120,120],[int(rows*1.89629629)-120,120],[120, rows-120],[int(rows*1.89629629)-120,rows-120]])
+    dist = 80
+    fieldTagPoints = np.float32([[dist,dist],[rows-dist,dist],[dist, rows-dist],[rows-dist,rows-dist]])
 
-    matrix = cv.getPerspectiveTransform(pts1, pts2)
-    result = cv.warpPerspective(frame, matrix, (int(rows*1.89629629), rows))
+    matrix = cv.getPerspectiveTransform(pts1, fieldTagPoints)
+    result = cv.warpPerspective(frame, matrix, (rows, rows))
+    print("Before: ", result.shape)
+    padding = 15
+    y = int(fieldTagPoints[0][1]) - padding
+    h = int(fieldTagPoints[3][1]) + padding
+    x = int(fieldTagPoints[0][0]) - padding
+    w = int(fieldTagPoints[3][0]) + padding
+    result = result[y:h, x:w]
+    print("After: ", result.shape)
+    
+    height, width = result.shape[:2]
+    
+    scaled = cv.resize(result, (int(width * 2), int(height * 2)))
 
-    return result
+    return scaled
 
 while True:
     _, frame = cap.read()
+    cv.rotate(frame, cv.ROTATE_180)
 
     # Detecting Apriltags
     detectApriltags(frame)
@@ -67,7 +81,7 @@ while True:
          reverted = perspectiveRevert(frame, tags[0].center, tags[1].center, tags[2].center, tags[3].center)
          cv.imshow("Reverted View", reverted)
 
-    cv.imshow("Raw View", frame) 
+    cv.imshow("Raw View", frame)
 
     if cv.waitKey(5) & 0xFF == 27:
         break

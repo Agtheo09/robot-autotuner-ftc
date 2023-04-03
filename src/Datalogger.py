@@ -3,7 +3,8 @@ import csv
 import datetime
 
 class Datalogger:
-    headers = ["timestamp", "x", "y", "heading"]
+    # headers = ["timestamp", "x", "y", "heading"]
+    headers = ["x", "y", "heading"]
     directory = "./logs"
     
     def calculateFullPath(self, expName):

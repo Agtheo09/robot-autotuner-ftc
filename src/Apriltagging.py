@@ -54,8 +54,9 @@ class AprilTagging:
     def getPositions(self):
         return self.tagPositions
     
-    def getTagById(self, id):
-        if len(self.tagsDetected) > 0:
-            return list(filter(lambda x: x.tag_id == id, self.tagsDetected))[0]
+    def getTagCenterById(self, id):
+        filteredArr = list(filter(lambda x: x.tag_id == id, self.tagsDetected))
+        if len(filteredArr) > 0:
+            return filteredArr[0].center
         else:
             return None

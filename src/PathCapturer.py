@@ -1,5 +1,5 @@
 import numpy as np
-from Datalogger import Datalogger
+from .Datalogger import Datalogger
 
 class PathCapturer:
     path = np.array([])
