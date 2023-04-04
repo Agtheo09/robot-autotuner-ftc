@@ -11,11 +11,11 @@ from src.PathEvaluator import PathEvaluator
 
 
 # Capturing Input
-cap = cv.VideoCapture(1)
+# cap = cv.VideoCapture(1)
 
-if not cap.isOpened():
-    print("Cannot open camera")
-    exit()
+# if not cap.isOpened():
+#     print("Cannot open camera")
+#     exit()
 
 
 fieldTagIds = [100, 101, 102, 103] # Top Left, Top Right, Bottom Left, Bottom Right
@@ -63,35 +63,50 @@ def applyPerspectiveRevert(frame):
     height, width = result.shape[:2]
     scaled = cv.resize(result, (int(width * 2), int(height * 2)))
     
-    return scaled
+    # return scaled
+    return result
 
 
-_, frame = cap.read()
+# _, frame = cap.read()
+frame = cv.imread("./imgs/sampled/sample-002.jpg")
 
 tagDetector.update(frame)
 calculatePerspectiveMatrix(frame,
-                           tagDetector.getTagCenterById(100),
-                           tagDetector.getTagCenterById(101),
-                           tagDetector.getTagCenterById(102),
-                           tagDetector.getTagCenterById(103))
+                           tagDetector.getTagCenterById(fieldTagIds[0]),
+                           tagDetector.getTagCenterById(fieldTagIds[1]),
+                           tagDetector.getTagCenterById(fieldTagIds[2]),
+                           tagDetector.getTagCenterById(fieldTagIds[3]))
 
+inputImg = applyPerspectiveRevert(frame)
 
-while True:
-    _, frame = cap.read()
+tagDetector.update(inputImg)
+
+fieldTagPoints = list(map(lambda x : tagDetector.getTagCenterById(x), fieldTagIds)) # Field
+
+# while True:
+    # _, frame = cap.read()
     
-    inputImg = applyPerspectiveRevert(frame)
-    # Detecting Apriltags
-    tagDetector.update(inputImg)
+# Detecting Apriltags
+inputImg = tagDetector.update(inputImg)
 
-    # Update Tag Positions
-    # fieldTagPositions = list(map(lambda x : tagDetector.getTagById(x).center, fieldTagIds)) # Field
-    robotTagPositions = list(map(lambda x : tagDetector.getTagCenterById(x), robotTagIds)) # Robot
+# Update Tag Positions
+robotTagPositions = list(map(lambda x : tagDetector.getTagCenterById(x), robotTagIds)) # Robot
 
-    cv.imshow("Raw", frame)
-    cv.imshow("Result", inputImg)
-    
-    if cv.waitKey(5) & 0xFF == 27:
-        break
+# print(robotTagPositions)
+if robotTagPositions[0] is not None and robotTagPositions[1] is not None:
+    print("Localizer Running")
+    localizer.update(fieldTagPoints, robotTagPositions)
+    print(localizer.getRobotPosition())
+
+cv.imshow("Raw", frame)
+cv.imshow("Result", inputImg)
 
 cv.waitKey(0)
-cv.destroyAllWindows()
+
+exit()
+    
+#     if cv.waitKey(5) & 0xFF == 27:
+#         break
+
+# cv.waitKey(0)
+# cv.destroyAllWindows()

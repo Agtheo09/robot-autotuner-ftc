@@ -7,7 +7,8 @@ class Localizer:
     
     # Constants
     tagOffset = [0, 0] # X, Y CM
-    fieldDimension = 3.65 # Meters
+    # fieldDimension = 3.65 # Meters
+    fieldDimension = 1.495 # Meters
     pixelsPerMeter = 0
     
     fieldTagPositions = []
@@ -23,13 +24,12 @@ class Localizer:
     robotPosition = [0, 0]
     lastRobotPosition = [1, 1]
     robotHeading = 0
-    robotVelocity = 0
+    robotVelocity = [0, 0]
     
     def __init__(self, numOfRobotTags, tagOffset):
         assert(numOfRobotTags == 1 or numOfRobotTags == 2)
         self.numOfRobotTags = numOfRobotTags
         self.tagOffset = tagOffset
-        
     
     def normalize(self, value):
         return value / self.pixelsPerMeter
@@ -40,6 +40,7 @@ class Localizer:
         
         TLTag = self.fieldTagPositions[0] # Top Left Tag Position
         TRTag = self.fieldTagPositions[1] # Top Right Tag Position
+        
         self.pixelsPerMeter = math.sqrt((TLTag[0] - TRTag[0])**2 + (TLTag[1] - TRTag[1])**2) / self.fieldDimension
         
         if self.numOfRobotTags == 2:
@@ -53,6 +54,7 @@ class Localizer:
             self.deltaPosition[0] = self.robotPosition[0] - self.lastRobotPosition[0]
             self.deltaPosition[1] = self.robotPosition[1] - self.lastRobotPosition[1]
             self.deltaTime = self.time2 - self.time1
+            
             # self.robotVelocity = math.sqrt(self.deltaPosition[0]**2 + self.deltaPosition[1]**2)/self.deltaTime # if it's for one value
             self.robotVelocity[0] = self.deltaPosition[0]/self.deltaTime
             self.robotVelocity[1] = self.deltaPosition[1]/self.deltaTime

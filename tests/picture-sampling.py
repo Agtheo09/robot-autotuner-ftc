@@ -1,4 +1,5 @@
 import cv2 as cv
+import os
 
 cap = cv.VideoCapture(1)
 
@@ -6,7 +7,7 @@ if not cap.isOpened():
     print("Cannot open camera")
     exit()
 
-folderPath = "./warp-input-imgs/"
+# folderPath = "..\imgs\\sampled"
 
 counter = 1
 
@@ -16,7 +17,7 @@ while True:
     cv.imshow("View", frame)
 
     if cv.waitKey(50) == ord("p"):
-        cv.imwrite(folderPath+"sample-{0:0=3d}.jpg".format(counter), frame)
+        cv.imwrite("./imgs/sampled/sample-{0:0=3d}.jpg".format(counter), frame)
         print(counter)
         counter += 1
 
