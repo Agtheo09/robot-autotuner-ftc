@@ -9,13 +9,12 @@ from src.PathCapturer import PathCapturer
 from src.Datalogger import Datalogger
 from src.PathEvaluator import PathEvaluator
 
-
 # Capturing Input
-# cap = cv.VideoCapture(1)
+cap = cv.VideoCapture(0)
 
-# if not cap.isOpened():
-#     print("Cannot open camera")
-#     exit()
+if not cap.isOpened():
+    print("Cannot open camera")
+    exit()
 
 
 fieldTagIds = [100, 101, 102, 103] # Top Left, Top Right, Bottom Left, Bottom Right
@@ -43,32 +42,22 @@ def calculatePerspectiveMatrix(frame, april1, april2, april3, april4):
     rows = frame.shape[0]
 
     originalPos = np.float32([april1, april2, april3, april4])
-    dist = 80
+    dist = 20
     fieldTagPoints = np.float32([[dist,dist],[rows-dist,dist],[dist, rows-dist],[rows-dist,rows-dist]])
 
     matrix = cv.getPerspectiveTransform(originalPos, fieldTagPoints)
     
 def applyPerspectiveRevert(frame):
-    result = cv.warpPerspective(frame, matrix, (rows, rows))
-    
-    # Cropping
-    padding = 15
-    y = int(fieldTagPoints[0][1]) - padding
-    h = int(fieldTagPoints[3][1]) + padding
-    x = int(fieldTagPoints[0][0]) - padding
-    w = int(fieldTagPoints[3][0]) + padding
-    result = result[y:h, x:w]
+    result = cv.warpPerspective(frame.copy(), matrix, (rows, rows))
 
     # Scaling
-    height, width = result.shape[:2]
-    scaled = cv.resize(result, (int(width * 2), int(height * 2)))
-    
-    # return scaled
+    # height, width = result.shape[:2]
+    # scaled = cv.resize(result, (int(width * 2), int(height * 2)))
+
     return result
 
 
-# _, frame = cap.read()
-frame = cv.imread("./imgs/sampled/sample-002.jpg")
+_, frame = cap.read()
 
 tagDetector.update(frame)
 calculatePerspectiveMatrix(frame,
@@ -77,36 +66,34 @@ calculatePerspectiveMatrix(frame,
                            tagDetector.getTagCenterById(fieldTagIds[2]),
                            tagDetector.getTagCenterById(fieldTagIds[3]))
 
-inputImg = applyPerspectiveRevert(frame)
+reverted = applyPerspectiveRevert(frame)
 
-tagDetector.update(inputImg)
+tagDetector.update(reverted)
 
-fieldTagPoints = list(map(lambda x : tagDetector.getTagCenterById(x), fieldTagIds)) # Field
+# fieldTagPoints = list(map(lambda x : tagDetector.getTagCenterById(x), fieldTagIds)) # Fields
 
-# while True:
-    # _, frame = cap.read()
+while True:
+    _, frame = cap.read()
     
-# Detecting Apriltags
-inputImg = tagDetector.update(inputImg)
+    reverted = applyPerspectiveRevert(frame)
+    
+    # Detecting Apriltags
+    detectedMat = tagDetector.update(reverted)
 
-# Update Tag Positions
-robotTagPositions = list(map(lambda x : tagDetector.getTagCenterById(x), robotTagIds)) # Robot
+    # Update Tag Positions
+    robotTagPositions = list(map(lambda x : tagDetector.getTagCenterById(x), robotTagIds)) # Robot
 
-# print(robotTagPositions)
-if robotTagPositions[0] is not None and robotTagPositions[1] is not None:
-    print("Localizer Running")
-    localizer.update(fieldTagPoints, robotTagPositions)
-    print(localizer.getRobotPosition())
+    # print(robotTagPositions)
+    if robotTagPositions[0] is not None and robotTagPositions[1] is not None:
+        localizer.update(fieldTagPoints, robotTagPositions)
+        print(localizer.getRobotPosition())
 
-cv.imshow("Raw", frame)
-cv.imshow("Result", inputImg)
+    cv.imshow("Raw", frame)
+     # height, width = result.shape[:2]
+    cv.imshow("Output", detectedMat)
+    
+    if cv.waitKey(5) & 0xFF == 27:
+        break
 
 cv.waitKey(0)
-
-exit()
-    
-#     if cv.waitKey(5) & 0xFF == 27:
-#         break
-
-# cv.waitKey(0)
-# cv.destroyAllWindows()
+cv.destroyAllWindows()
