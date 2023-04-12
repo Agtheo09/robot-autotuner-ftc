@@ -21,19 +21,22 @@ fieldTagIds = [100, 101, 102, 103] # Top Left, Top Right, Bottom Left, Bottom Ri
 robotTagIds = [104, 105] # Left, Right
 
 # Robot Outputs
-# Smth here
+robotPose = [0, 0, 0] # X, Y, Heading
 
 # Initializing Custom Classes
 tagDetector = AprilTagging()
 localizer = Localizer(2, [0, 0])
 datalogger = Datalogger()
+capturer = PathCapturer("Test")
 
 # Field Tag Positions
-fieldTagPoints = np.array([])
+fieldTagPoints = []
 
 # Temp Variables
 matrix = None
 rows = None
+
+pathCapturerRunning = False
 
 def calculatePerspectiveMatrix(frame, april1, april2, april3, april4):
     global matrix
@@ -86,7 +89,23 @@ while True:
     # print(robotTagPositions)
     if robotTagPositions[0] is not None and robotTagPositions[1] is not None:
         localizer.update(fieldTagPoints, robotTagPositions)
-        print(localizer.getRobotPosition())
+        currentPosition = localizer.getRobotPosition()
+        robotPose[0] = currentPosition[0]
+        robotPose[1] = currentPosition[1]
+        robotPose[2] = localizer.getRobotHeading()
+        
+        if pathCapturerRunning:
+            # print("Capturing...")
+            capturer.update(robotPose)
+        
+        if cv.waitKey(1) == ord('c'):
+            if not pathCapturerRunning:
+                pathCapturerRunning = True
+                capturer.startCapturing()
+        if cv.waitKey(1) == ord('v'):
+            if pathCapturerRunning:
+                pathCapturerRunning = False
+                capturer.stopCapturing()
 
     cv.imshow("Raw", frame)
      # height, width = result.shape[:2]
