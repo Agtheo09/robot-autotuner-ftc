@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.animation as animation
 
-data = np.genfromtxt("./tests/values_2.csv", delimiter = ',', dtype=float, skip_header=1)
+data = np.genfromtxt("./tests/values.csv", delimiter = ',', dtype=float, skip_header=1)
 bg = plt.imread("./imgs/powerplay-field.png")
 
 # print(data)
@@ -17,7 +17,7 @@ for row in data:
     y.append(row[2])
     
 fig, ax = plt.subplots()
-scat = ax.scatter([], [], marker='.', color='blue')
+scat = ax.scatter([], [], marker='.', color='green')
 line, = ax.plot([], [], color='black', alpha=0.5)
 
 def animate(i):
