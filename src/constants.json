@@ -1,0 +1,17 @@
+{
+    "tags": {
+        "field": {
+            "topLeft": 100,
+            "topRight": 101,
+            "bottomLeft": 102,
+            "bottomRight": 103
+        },
+        "robot": {
+            "left": 104,
+            "right": 105
+        }
+    }, 
+    "field": {
+        "sideLength": 3.6
+    }
+}

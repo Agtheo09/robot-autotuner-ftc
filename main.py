@@ -1,6 +1,7 @@
 import cv2 as cv
 from pupil_apriltags import Detector
 import numpy as np
+import json
 
 # Custom Classes
 from src.Apriltagging import AprilTagging
@@ -15,10 +16,26 @@ cap = cv.VideoCapture(0)
 if not cap.isOpened():
     print("Cannot open camera")
     exit()
+    
 
+constants = None
 
-fieldTagIds = [100, 101, 102, 103] # Top Left, Top Right, Bottom Left, Bottom Right
-robotTagIds = [104, 105] # Left, Right
+with open('./tests/constants.json') as f:
+    constants = json.load(f)
+
+fieldTagIds = [
+    constants['tags']['field']['topLeft'],
+    constants['tags']['field']['topRight'],
+    constants['tags']['field']['bottomLeft'],
+    constants['tags']['field']['bottomRight']
+]
+robotTagIds = [
+    constants['tags']['robot']['left'],
+    constants['tags']['robot']['right'],
+]
+
+# fieldTagIds = [100, 101, 102, 103] # Top Left, Top Right, Bottom Left, Bottom Right
+# robotTagIds = [104, 105] # Left, Right
 
 # Robot Outputs
 robotPose = [0, 0, 0] # X, Y, Heading

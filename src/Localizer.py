@@ -1,6 +1,7 @@
 import cv2 as cv
 import math
 import time
+import json
 
 class Localizer:
     numOfRobotTags = -1
@@ -8,7 +9,7 @@ class Localizer:
     # Constants
     tagOffset = [0, 0] # X, Y CM
     # fieldDimension = 3.65 # Meters
-    fieldDimension = 1.495 # Meters
+    fieldDimension = 0 # Meters
     pixelsPerMeter = 0
     
     fieldTagPositions = []
@@ -30,6 +31,11 @@ class Localizer:
         assert(numOfRobotTags == 1 or numOfRobotTags == 2)
         self.numOfRobotTags = numOfRobotTags
         self.tagOffset = tagOffset
+
+        with open('./tests/constants.json') as f:
+            data = json.load(f)
+            
+            self.fieldDimension = data['field']['sideLength']
     
     def normalize(self, value):
         return value / self.pixelsPerMeter
