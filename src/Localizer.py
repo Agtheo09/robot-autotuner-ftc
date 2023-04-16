@@ -32,7 +32,7 @@ class Localizer:
         self.numOfRobotTags = numOfRobotTags
         self.tagOffset = tagOffset
 
-        with open('./tests/constants.json') as f:
+        with open('./src/constants.json') as f:
             data = json.load(f)
             
             self.fieldDimension = data['field']['sideLength']

@@ -20,7 +20,7 @@ if not cap.isOpened():
 
 constants = None
 
-with open('./tests/constants.json') as f:
+with open('./src/constants.json') as f:
     constants = json.load(f)
 
 fieldTagIds = [
