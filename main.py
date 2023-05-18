@@ -77,7 +77,7 @@ if __name__ == "__main__":
         capturer.update(robotPose)
 
         if cv.waitKey(1) == ord("c"):
-            if not capturer.captureEnabled:
+            if not capturer.captureEnabled and localizer.atTheCorrectSpot():
                 capturer.startCapturing()
         if cv.waitKey(1) == ord("v"):
             if capturer.captureEnabled:

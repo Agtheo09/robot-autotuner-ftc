@@ -19,7 +19,14 @@ class Localizer:
     robotHeading = 0  # Degrees
     robotVelocity = [0.0, 0.0]  # m/s
 
-    def __init__(self, numOfRobotTags=-1, tagOffset=np.array([0, 0])):
+    poseMaxErrorAllowed = np.array([0.01, 0.01, 1.0])  # Meters, Meters, Degrees
+
+    def __init__(
+        self,
+        numOfRobotTags=-1,
+        tagOffset=np.array([0, 0]),
+        startingPose=np.array([0.0, 0.0, 0.0]),
+    ):
         assert (
             numOfRobotTags == 1 or numOfRobotTags == 2 or numOfRobotTags == -1
         )
@@ -27,6 +34,8 @@ class Localizer:
         self.tagOffset = tagOffset
         self.robotPose = np.array([0.0, 0.0, 0.0])
         self.lastRobotPose = np.array([0.0, 0.0, 0.0])
+
+        self.startingPose = startingPose
 
         # Get Constants
         with open("./src/constants.json") as f:
@@ -120,3 +129,9 @@ class Localizer:
 
     def getRobotCurrentVelocity(self):
         return self.robotVelocity
+
+    def placementOffset(self):
+        return self.startingPose - self.pose
+
+    def atTheCorrectSpot(self):
+        return np.all(self.placementOffset() < self.poseMaxErrorAllowed)
