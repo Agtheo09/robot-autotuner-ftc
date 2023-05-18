@@ -1,6 +1,10 @@
+import datetime
+from time import sleep
 import numpy as np
 from .Datalogger import Datalogger
+from .Visualizer import Visualizer
 from time import time
+
 
 class PathCapturer:
     rows = []
@@ -11,21 +15,18 @@ class PathCapturer:
     timestamp = None
 
     datalogger = Datalogger()
-    
+    visualizer = Visualizer()
+
     def __init__(self, experimentName):
         self.experimentName = experimentName
 
     def addPoint(self, pose):
         self.timestamp = time() - self.expStartingTime
-        row = [0, 0, 0, 0]
-        
-        row[0] = self.timestamp
-        row[1] = pose[0]
-        row[2] = pose[1]
-        row[3] = pose[2]
-        
+
+        row = np.concatenate((np.array([self.timestamp]), pose.copy()))
+
         self.rows.append(row)
-        
+
         self.path.append(pose[:2])
 
     def startCapturing(self):
@@ -36,11 +37,12 @@ class PathCapturer:
 
     def stopCapturing(self):
         self.captureEnabled = False
-        self.datalogger.saveExpFile(self.experimentName, self.rows)
+        dateCode = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
+        fileName = f"{self.experimentName}_{dateCode}"
+        self.datalogger.saveExpFile(fileName, self.rows)
+        self.visualizer.visualizeExperiments([fileName])
         self.path = []
- 
-    def update(self, pose):            
+
+    def update(self, pose):
         if self.captureEnabled:
-            print("Passed: ", self.path)
             self.addPoint(pose)
-            

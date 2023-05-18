@@ -2,87 +2,121 @@ import cv2 as cv
 import math
 import time
 import json
+import numpy as np
+
 
 class Localizer:
-    numOfRobotTags = -1
-    
-    # Constants
-    tagOffset = [0, 0] # X, Y CM
-    # fieldDimension = 3.65 # Meters
-    fieldDimension = 0 # Meters
-    pixelsPerMeter = 0
-    
-    fieldTagPositions = []
-    robotTagPositions = []
-    
     # Util
-    time1 = 0 # Sec
-    time2 = 0 # Sec
-    deltaTime = 0 # Sec
-    deltaPosition = [0, 0]
-    
+    time1 = 0  # Sec
+    time2 = 0  # Sec
+    deltaTime = 0  # Sec
+    deltaPosition = [0, 0]  # Meters
+
+    pixelsPerMeter = 0
+
     # Robot Output
-    robotPosition = [0, 0]
-    lastRobotPosition = [1, 1]
-    robotHeading = 0
-    robotVelocity = [0, 0]
-    
-    def __init__(self, numOfRobotTags, tagOffset):
-        assert(numOfRobotTags == 1 or numOfRobotTags == 2)
+    lastRobotPosition = [1, 1]  # Meters
+    robotHeading = 0  # Degrees
+    robotVelocity = [0.0, 0.0]  # m/s
+
+    def __init__(self, numOfRobotTags=-1, tagOffset=np.array([0, 0])):
+        assert (
+            numOfRobotTags == 1 or numOfRobotTags == 2 or numOfRobotTags == -1
+        )
         self.numOfRobotTags = numOfRobotTags
         self.tagOffset = tagOffset
+        self.robotPose = np.array([0.0, 0.0, 0.0])
+        self.lastRobotPose = np.array([0.0, 0.0, 0.0])
 
-        with open('./src/constants.json') as f:
-            data = json.load(f)
-            
-            self.fieldDimension = data['field']['sideLength']
-    
+        # Get Constants
+        with open("./src/constants.json") as f:
+            constants = json.load(f)
+
+            self.fieldDimension = constants["field"]["sideLength"]
+
+            self.fieldTagIds = [
+                constants["tags"]["field"]["topLeft"],
+                constants["tags"]["field"]["topRight"],
+                constants["tags"]["field"]["bottomLeft"],
+                constants["tags"]["field"]["bottomRight"],
+            ]
+            self.robotTagIds = [
+                constants["tags"]["robot"]["left"],
+                constants["tags"]["robot"]["right"],
+            ]
+
     def normalize(self, value):
         return value / self.pixelsPerMeter
-    
-    def update(self, fieldTgPositions, robotTgPositions):        
-        self.fieldTagPositions = fieldTgPositions
-        self.robotTagPositions = robotTgPositions
-        
-        TLTag = self.fieldTagPositions[0] # Top Left Tag Position
-        TRTag = self.fieldTagPositions[1] # Top Right Tag Position
-        
-        self.pixelsPerMeter = math.sqrt((TLTag[0] - TRTag[0])**2 + (TLTag[1] - TRTag[1])**2) / self.fieldDimension
-        
+
+    def normalizePoint(self, value):
+        return [value[0] / self.pixelsPerMeter, value[1] / self.pixelsPerMeter]
+
+    def updateFieldTagPositions(self, fieldTagPositions):
+        self.fieldTagPositions = fieldTagPositions
+        TLTag = self.fieldTagPositions[0]  # Top Left Tag Position
+        TRTag = self.fieldTagPositions[1]  # Top Right Tag Position
+
+        self.pixelsPerMeter = math.dist(TLTag, TRTag) / self.fieldDimension
+
+    def update(self, robotTagPositions):
+        if robotTagPositions[0] is None or robotTagPositions[1] is None:
+            return self.robotPose
+
+        robotTagPositions = np.array(robotTagPositions)
+
         if self.numOfRobotTags == 2:
-            # Robot Position
-            self.robotPosition[0] = self.normalize(
-                (self.robotTagPositions[0][0] + self.robotTagPositions[1][0]) / 2) - self.tagOffset[0]/100
-            self.robotPosition[1] = self.normalize(
-                (self.robotTagPositions[0][1] + self.robotTagPositions[1][1]) / 2) - self.tagOffset[1]/100
-            
-            self.time2 = time.time()
-            self.deltaPosition[0] = self.robotPosition[0] - self.lastRobotPosition[0]
-            self.deltaPosition[1] = self.robotPosition[1] - self.lastRobotPosition[1]
-            self.deltaTime = self.time2 - self.time1
-            
-            # self.robotVelocity = math.sqrt(self.deltaPosition[0]**2 + self.deltaPosition[1]**2)/self.deltaTime # if it's for one value
-            self.robotVelocity[0] = self.deltaPosition[0]/self.deltaTime
-            self.robotVelocity[1] = self.deltaPosition[1]/self.deltaTime
-            
-            # Robot Heading
-            self.robotHeading = math.degrees(math.atan2(
-                self.robotTagPositions[0][1] - self.robotTagPositions[1][1],
-                self.robotTagPositions[1][0] - self.robotTagPositions[0][0]))
+            tagMidPoint = np.mean(robotTagPositions, axis=1)
+
+            # X
+            self.robotPose[0] = (
+                self.normalize(tagMidPoint[0]) - self.tagOffset[0] / 100
+            )
+
+            # Y
+            self.robotPose[1] = (
+                self.normalize(tagMidPoint[1]) - self.tagOffset[1] / 100
+            )
+
+            # # Robot Heading
+            self.robotPose[2] = math.degrees(
+                math.atan2(
+                    robotTagPositions[0][1] - robotTagPositions[1][1],
+                    robotTagPositions[1][0] - robotTagPositions[0][0],
+                )
+            )
         elif self.numOfRobotTags == 1:
-            self.robotPosition[0] = self.normalize(
-                self.robotTagPositions[0][0]) - self.tagOffset[0]/100
-            self.robotPosition[1] = self.normalize(
-                self.robotTagPositions[0][1]) - self.tagOffset[1]/100
-            
-        self.lastRobotPosition = self.robotPosition
+            # X
+            self.robotPose[0] = (
+                self.normalize(robotTagPositions[0][0])
+                - self.tagOffset[0] / 100
+            )
+
+            # Y
+            self.robotPose[1] = (
+                self.normalize(robotTagPositions[0][1])
+                - self.tagOffset[1] / 100
+            )
+
+        self.time2 = time.time()
+        self.deltaPosition = (self.robotPose - self.lastRobotPose)[:2]
+        print(self.robotPose, self.lastRobotPose)
+
+        self.deltaTime = self.time2 - self.time1
+
+        # self.robotVelocity = math.sqrt(self.deltaPosition[0]**2 + self.deltaPosition[1]**2)/self.deltaTime # if it's for one value
+        self.robotVelocity = self.deltaPosition / self.deltaTime
+
+        self.lastRobotPose = self.robotPose
         self.time1 = time.time()
-        
+
     def getRobotPosition(self):
-        return self.robotPosition
-    
+        return self.robotPose[:2]
+
+    def getRobotPose(self):
+        return self.robotPose
+
     def getRobotHeading(self):
-        return self.robotHeading
-    
+        return self.robotPose[2]
+
     def getRobotCurrentVelocity(self):
         return self.robotVelocity

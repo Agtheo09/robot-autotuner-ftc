@@ -1,7 +1,5 @@
 import cv2 as cv
-from pupil_apriltags import Detector
-import numpy as np
-import json
+from cvzone import FPS
 
 # Custom Classes
 from src.Apriltagging import AprilTagging
@@ -9,127 +7,101 @@ from src.Localizer import Localizer
 from src.PathCapturer import PathCapturer
 from src.Datalogger import Datalogger
 from src.PathEvaluator import PathEvaluator
+from src.CameraCalibrator import CameraCalibrator
+from src.WebcamStreaming import WebcamStreaming
 
-# Capturing Input
-cap = cv.VideoCapture(0)
+if __name__ == "__main__":
+    # Capturing Input
+    cap = cv.VideoCapture("./imgs/sample-vid.mp4")
+    if not cap.isOpened():
+        print("Cannot open camera")
+        exit()
+    # cap = WebcamStreaming(src="./imgs/sample-vid.mp4")
+    # cap.start()
 
-if not cap.isOpened():
-    print("Cannot open camera")
-    exit()
-    
+    fpsReader = FPS()
+    minFPS = 200
+    maxFPS = 0
 
-constants = None
+    # Initializing Custom Classes
+    tagDetector = AprilTagging()
+    localizer = Localizer(numOfRobotTags=2, tagOffset=[0, 0])
+    datalogger = Datalogger()
+    capturer = PathCapturer("Experiment")
 
-with open('./src/constants.json') as f:
-    constants = json.load(f)
+    pathCapturerRunning = False
 
-fieldTagIds = [
-    constants['tags']['field']['topLeft'],
-    constants['tags']['field']['topRight'],
-    constants['tags']['field']['bottomLeft'],
-    constants['tags']['field']['bottomRight']
-]
-robotTagIds = [
-    constants['tags']['robot']['left'],
-    constants['tags']['robot']['right'],
-]
+    frame = cap.read()[1]
+    # frame = cap.read()
 
-# fieldTagIds = [100, 101, 102, 103] # Top Left, Top Right, Bottom Left, Bottom Right
-# robotTagIds = [104, 105] # Left, Right
+    tagDetector.update(frame)
+    cam_calibr = CameraCalibrator(
+        tagDetector.getTagCenterById(localizer.fieldTagIds[0]),
+        tagDetector.getTagCenterById(localizer.fieldTagIds[1]),
+        tagDetector.getTagCenterById(localizer.fieldTagIds[2]),
+        tagDetector.getTagCenterById(localizer.fieldTagIds[3]),
+        frame_size=(frame.shape[0], frame.shape[0]),
+        padding=50,
+    )
 
-# Robot Outputs
-robotPose = [0, 0, 0] # X, Y, Heading
+    reverted = cam_calibr.applyPerspectiveRevert(frame)
 
-# Initializing Custom Classes
-tagDetector = AprilTagging()
-localizer = Localizer(2, [0, 0])
-datalogger = Datalogger()
-capturer = PathCapturer("Test")
+    localizer.updateFieldTagPositions(cam_calibr.getFieldTagPositions())
 
-# Field Tag Positions
-fieldTagPoints = []
+    tagDetector.update(reverted)
 
-# Temp Variables
-matrix = None
-rows = None
+    while True:
+        frame = cap.read()[1]
+        # frame = cap.read()
 
-pathCapturerRunning = False
+        # Calibrating Camera
+        calibrated = cam_calibr.applyPerspectiveRevert(frame)
 
-def calculatePerspectiveMatrix(frame, april1, april2, april3, april4):
-    global matrix
-    global rows
-    global fieldTagPoints
-    rows = frame.shape[0]
+        # Detecting Apriltags
+        detectedMat = tagDetector.update(calibrated)
 
-    originalPos = np.float32([april1, april2, april3, april4])
-    dist = 20
-    fieldTagPoints = np.float32([[dist,dist],[rows-dist,dist],[dist, rows-dist],[rows-dist,rows-dist]])
+        # Update Tag Positions
+        robotTagPositions = list(
+            map(
+                lambda x: tagDetector.getTagCenterById(x), localizer.robotTagIds
+            )
+        )
 
-    matrix = cv.getPerspectiveTransform(originalPos, fieldTagPoints)
-    
-def applyPerspectiveRevert(frame):
-    result = cv.warpPerspective(frame.copy(), matrix, (rows, rows))
+        localizer.update(robotTagPositions)
 
-    # Scaling
-    # height, width = result.shape[:2]
-    # scaled = cv.resize(result, (int(width * 2), int(height * 2)))
+        robotPose = localizer.getRobotPose()
+        robotSpeed = localizer.getRobotCurrentVelocity()
 
-    return result
+        print("Pose: ", robotPose, "  Velocity: ", robotSpeed)
 
+        capturer.update(robotPose)
 
-_, frame = cap.read()
-
-tagDetector.update(frame)
-calculatePerspectiveMatrix(frame,
-                           tagDetector.getTagCenterById(fieldTagIds[0]),
-                           tagDetector.getTagCenterById(fieldTagIds[1]),
-                           tagDetector.getTagCenterById(fieldTagIds[2]),
-                           tagDetector.getTagCenterById(fieldTagIds[3]))
-
-reverted = applyPerspectiveRevert(frame)
-
-tagDetector.update(reverted)
-
-# fieldTagPoints = list(map(lambda x : tagDetector.getTagCenterById(x), fieldTagIds)) # Fields
-
-while True:
-    _, frame = cap.read()
-    
-    reverted = applyPerspectiveRevert(frame)
-    
-    # Detecting Apriltags
-    detectedMat = tagDetector.update(reverted)
-
-    # Update Tag Positions
-    robotTagPositions = list(map(lambda x : tagDetector.getTagCenterById(x), robotTagIds)) # Robot
-
-    # print(robotTagPositions)
-    if robotTagPositions[0] is not None and robotTagPositions[1] is not None:
-        localizer.update(fieldTagPoints, robotTagPositions)
-        currentPosition = localizer.getRobotPosition()
-        robotPose[0] = currentPosition[0]
-        robotPose[1] = currentPosition[1]
-        robotPose[2] = localizer.getRobotHeading()
-        
-        if pathCapturerRunning:
-            # print("Capturing...")
-            capturer.update(robotPose)
-        
-        if cv.waitKey(1) == ord('c'):
-            if not pathCapturerRunning:
-                pathCapturerRunning = True
+        if cv.waitKey(1) == ord("c"):
+            if not capturer.captureEnabled:
                 capturer.startCapturing()
-        if cv.waitKey(1) == ord('v'):
-            if pathCapturerRunning:
-                pathCapturerRunning = False
+        if cv.waitKey(1) == ord("v"):
+            if capturer.captureEnabled:
                 capturer.stopCapturing()
 
-    cv.imshow("Raw", frame)
-     # height, width = result.shape[:2]
-    cv.imshow("Output", detectedMat)
-    
-    if cv.waitKey(5) & 0xFF == 27:
-        break
+        rawSize = frame.shape[:2]
+        cv.imshow("Raw", cv.resize(frame, (720, 720)))
+        # height, width = result.shape[:2]
 
-cv.waitKey(0)
-cv.destroyAllWindows()
+        # FPS
+        fps, plusFPS = fpsReader.update(
+            detectedMat, pos=(50, 80), color=(0, 255, 0), scale=5, thickness=5
+        )
+
+        minFPS = fps if fps < minFPS else minFPS
+        maxFPS = fps if fps > maxFPS else maxFPS
+
+        cv.imshow("Output", cv.resize(plusFPS, (720, 720)))
+
+        if cv.waitKey(5) & 0xFF == 27:
+            break
+
+    cap.release()
+    # cap.stop()
+    cv.destroyAllWindows()
+    print("Max FPS: ", maxFPS)
+    print("Min FPS: ", minFPS)
