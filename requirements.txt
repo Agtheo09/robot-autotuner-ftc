@@ -1,0 +1,8 @@
+python==3.10
+opencv
+pupil_apriltags
+cvzone
+numpy
+scipy
+matplotlib
+bs4
