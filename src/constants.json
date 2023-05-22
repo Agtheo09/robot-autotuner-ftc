@@ -12,6 +12,7 @@
         }
     }, 
     "field": {
-        "sideLength": 3.6
+        "width": 3.6,
+        "height": 3.6
     }
 }

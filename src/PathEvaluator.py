@@ -60,8 +60,6 @@ class PathEvaluator:
         x_new = f1(t_new)
         y_new = f2(t_new)
 
-        print("X New: ", len(self.headings))
-
         rows = []
 
         for i in range(0, len(t_new) - 1):

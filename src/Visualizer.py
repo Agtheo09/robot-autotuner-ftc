@@ -7,7 +7,7 @@ from .Datalogger import Datalogger
 class Visualizer:
     pointHistory = []
 
-    fieldDimension = 3.6
+    fieldDimension = (3.6, 3.6)
 
     # Log Files Directory
     directory = "./logs"
@@ -86,8 +86,24 @@ class Visualizer:
 
             padding = 0
 
-            ax.set_xlim(padding, self.fieldDimension + padding)
-            ax.set_ylim(padding, self.fieldDimension + padding)
+            # ax.set_xlim(padding, self.fieldDimension + padding)
+            # ax.set_ylim(padding, self.fieldDimension + padding)
+            ax.set_xlim(
+                -self.fieldDimension[0] - padding,
+                self.fieldDimension[0] + padding,
+            )
+            ax.set_ylim(
+                -self.fieldDimension[1] - padding,
+                self.fieldDimension[1] + padding,
+            )
+
+            ax.set_aspect("equal")
+
+            # Move Axis to the center
+            ax.spines["left"].set_position("center")
+            ax.spines["bottom"].set_position("center")
+            ax.spines["right"].set_color("none")
+            ax.spines["top"].set_color("none")
 
             # ax.get_xaxis().set_visible(False)
             # ax.get_yaxis().set_visible(False)
