@@ -13,15 +13,15 @@ from src.WebcamStreaming import WebcamStreaming
 
 if __name__ == "__main__":
     # Capturing Input
-    cap = WebcamStreaming(src="./imgs/sample-vid.mp4")
-    cap.start()
-    # cap = cv.VideoCapture("./imgs/sample-vid.mp4")
+    # cap = WebcamStreaming(src="./imgs/sample-vid.mp4")
+    # cap.start()
+    cap = cv.VideoCapture("./imgs/sample-vid.mp4")
 
     fpsReader = FPS()
     minFPS = 200
     maxFPS = 0
     sumFps = 0
-    counter = 0
+    counter = 1
 
     # Initializing Custom Classes
     tagDetector = AprilTagging()
@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     pathCapturerRunning = False
 
-    frame = cap.read()
+    frame = cap.read()[1]
 
     tagDetector.update(frame)
     cam_calibr = CameraCalibrator(
@@ -51,9 +51,11 @@ if __name__ == "__main__":
 
     robotTagPositions = [(0, 0), (0, 0)]
 
-    while cap.isQEmpty():
-        # while True:
-        frame = cap.read()
+    # while cap.isQEmpty():
+    while True:
+        frame = cap.read()[1]
+        if frame is None:
+            continue
 
         # Calibrating Camera
         calibrated = cam_calibr.applyPerspectiveRevert(frame)
@@ -113,10 +115,12 @@ if __name__ == "__main__":
         if cv.waitKey(5) & 0xFF == 27:
             break
 
-    cap.stop()
-    # cap.release()
+    # cap.stop()
+    # cap.join()
+    cap.release()
     cv.destroyAllWindows()
     # FPS Calculations Preview
     print("Max FPS: ", maxFPS)
     print("Min FPS: ", minFPS)
     print("Average FPS: ", sumFps / counter)
+    print("Total Frames Previewed: ", counter)
