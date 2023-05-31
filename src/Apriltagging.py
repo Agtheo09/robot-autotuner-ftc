@@ -1,7 +1,7 @@
 import cv2 as cv
 from pupil_apriltags import Detector
 
-PLOT_APRIL_TAGS = True
+PLOT_APRIL_TAGS = False
 
 
 class AprilTagging:
@@ -52,3 +52,9 @@ class AprilTagging:
     def getTagCenterById(self, id):
         filteredArr = list(filter(lambda x: x.tag_id == id, self.tagsDetected))
         return filteredArr[0].center if filteredArr else None
+
+    def getTagCentersByIds(self, ids):
+        detectedTags = list(
+            filter(lambda x: x.tag_id in set(ids), self.tagsDetected)
+        )
+        return [tag.center for tag in detectedTags]

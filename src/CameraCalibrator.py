@@ -5,10 +5,7 @@ import numpy as np
 class CameraCalibrator:
     def __init__(
         self,
-        topLeft,
-        topRight,
-        bottomLeft,
-        bottomRight,
+        tagCenters,  # Should be in a form of TopLeft, TopRight, BottomLeft, BottomRight
         frame_size=(1080, 1080),
         padding=20,
     ):
@@ -27,11 +24,12 @@ class CameraCalibrator:
             ]
         )
 
-        self.updateCorners(topLeft, topRight, bottomLeft, bottomRight)
-
+        self.updateCorners(
+            tagCenters[0], tagCenters[1], tagCenters[2], tagCenters[3]
+        )
         # Load the fish-eye distortion parameters
-        self.camera_matrix = np.load("camera_matrix.npy")
-        self.dist_coeffs = np.load("distortion_coeffs.npy")
+        # self.camera_matrix = np.load("camera_matrix.npy")
+        # self.dist_coeffs = np.load("distortion_coeffs.npy")
 
     def updateCorners(self, topLeft, topRight, bottomLeft, bottomRight):
         self.topLeft = topLeft
@@ -51,12 +49,13 @@ class CameraCalibrator:
     def undistortFrame(self, frame):
         return cv.undistort(frame, self.camera_matrix, self.dist_coeffs)
 
-    def applyPerspectiveRevert(self, frame):
+    def applyCalibrations(self, frame):
         distorted = frame.copy()
-        undistorted = self.undistortFrame(distorted)
+        # undistorted = self.undistortFrame(distorted)
+        # Perspective Revert
         return cv.warpPerspective(
-            # frame.copy(),
-            undistorted,
+            distorted,
+            # undistorted,
             self.perspective_matrix,
             self.frame_size,
         )
