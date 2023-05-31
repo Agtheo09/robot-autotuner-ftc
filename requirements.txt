@@ -1,7 +1,6 @@
 python==3.10
 opencv
-pupil_apriltags
-cvzone
+pupil-apriltags
 numpy
 scipy
 matplotlib
