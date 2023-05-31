@@ -1,4 +1,4 @@
-from WebcamStreaming import WebcamStreaming
+from VideoStream import WebcamStreaming
 from cvzone import FPS
 import cv2 as cv
 import time
