@@ -3,6 +3,7 @@ This program is only for testing purposes and on a match is not legal. It's a po
 
 # Installation
 ## Step 1: Download the repository ZIP file
+Extract the .zip file somewhere that you like to store it.
 ## Step 2: Install the required libraries for the project
 Open the command line/terminal in your repo/folder and run the following command: 
 ```pip install -r requirements.txt```
@@ -13,7 +14,7 @@ Open the command line/terminal in your repo/folder and run the following command
 4. Then run the following command: 
 ```conda install -r requirements.txt```
 In case the enviroment has an error solving it.
-* Activate the Robot-Autotuner environment by running ```conda activate [ENV_NAME]```
-* Locate your repo/folder if you haven't already
-* Then run the following command: 
-```pip install -r requirements.txt```
+    * Activate the Robot-Autotuner environment by running ```conda activate [ROBOT_AUTOTUNER_ENV_NAME]```
+    * Locate your repo/folder if you haven't already
+    * Then run the following command: 
+    ```pip install -r requirements.txt```
