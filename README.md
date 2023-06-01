@@ -1,6 +1,11 @@
 # Robot Autotuner
 This program is only for testing purposes and on a match is not legal. It's a powerful way to tune your PIDF Feedforward Values for the Robot. Saves up a lot of time and it's also really accurate if it is set up well.
 
+![GitHub](https://img.shields.io/github/license/theinventors-ftc/robot-autotuner)
+![GitHub top language](https://img.shields.io/github/languages/top/theinventors-ftc/robot-autotuner) 
+![GitHub language count](https://img.shields.io/github/languages/count/theinventors-ftc/robot-autotuner)
+![GitHub all releases](https://img.shields.io/github/downloads/theinventors-ftc/robot-autotuner/total)
+
 # Installation
 ## Step 1: Download the repository ZIP file
 Extract the .zip file somewhere that you like to store it.
