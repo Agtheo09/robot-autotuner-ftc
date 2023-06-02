@@ -57,4 +57,8 @@ class AprilTagging:
         detectedTags = list(
             filter(lambda x: x.tag_id in set(ids), self.tagsDetected)
         )
-        return [tag.center for tag in detectedTags]
+        centers = [tag.center for tag in detectedTags]
+        while len(centers) < 2:
+            centers.append([0, 0])
+
+        return centers[:2]
