@@ -6,7 +6,7 @@ This program is only for testing purposes and on a match is not legal. It's a po
 ![GitHub language count](https://img.shields.io/github/languages/count/theinventors-ftc/robot-autotuner)
 ![GitHub all releases](https://img.shields.io/github/downloads/theinventors-ftc/robot-autotuner/total)
 
-# Installation
+# A. Installation
 ## Step 1: Download the repository ZIP file
 Extract the .zip file somewhere that you like to store it.
 ## Step 2: Install the required libraries for the project
@@ -23,3 +23,4 @@ In case the enviroment has an error solving it.
     * Locate your repo/folder if you haven't already
     * Then run the following command: 
     ```pip install -r requirements.txt```
+# B. Camera Calibration
