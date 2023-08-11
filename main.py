@@ -2,6 +2,7 @@ import cv2 as cv
 import numpy as np
 import time
 import keyboard
+from matplotlib import pyplot as plt
 
 # Custom Classes
 from src.Apriltagging import AprilTagging
@@ -26,6 +27,7 @@ if __name__ == "__main__":
 
     tagDetector.update(frame)
     fieldTagsCenters = tagDetector.getTagCentersByIds(localizer.fieldTagIds)
+
     cam_calibr = CameraCalibrator(
         fieldTagsCenters,
         frame_size=(frame.shape[0], frame.shape[0]),
@@ -40,8 +42,7 @@ if __name__ == "__main__":
 
     robotTagPositions = [(0, 0), (0, 0)]
 
-    counter = 1
-    sumOfFPS = 0
+    fpss = []
     # while cap.more():
     while True:
         start_time = time.time()
@@ -79,14 +80,16 @@ if __name__ == "__main__":
             if capturer.captureEnabled:
                 capturer.stopCapturing()
 
+        # Calculate FPS
         dt = time.time() - start_time + 0.000000000000000001
         fps = 1 / dt
-        sumOfFPS += fps
-        counter += 1
+        fpss.append(fps)
+
+        # Preview FPS
         print("Current FPS: ", fps)
         cv.putText(
             detectedMat,
-            f"FPS: {fps}",
+            f"FPS: {fps:.0f} | Capturer State: {'Capturing' if capturer.captureEnabled else 'Not Capturing'}",
             (50, 50),
             cv.FONT_HERSHEY_SIMPLEX,
             1,
@@ -95,14 +98,31 @@ if __name__ == "__main__":
             cv.LINE_AA,
         )
 
+        # Save FPSs
+
         # Show Mats
-        cv.imshow("Raw", cv.resize(frame, (720, 720)))
-        cv.imshow("Proccessed", cv.resize(detectedMat, (700, 700)))
+        # cv.imshow("Raw", cv.resize(frame, (720, 720)))
+        # cv.imshow("Proccessed", cv.resize(detectedMat, (700, 700)))
+
+        cv.imshow(
+            "MultiView",
+            np.concatenate(
+                [
+                    cv.resize(frame, (720, 720)),
+                    cv.resize(detectedMat, (720, 720)),
+                ],
+                axis=1,
+            ),
+        )
 
         if cv.waitKey(1) & 0xFF == 27:
             break
 
-    cap.stop()
-    # cap.release()
-    cv.destroyAllWindows()
-    print("Average FPS: ", sumOfFPS / counter)
+cap.stop()
+# cap.release()
+cv.destroyAllWindows()
+print("Average FPS: ", np.mean(fpss))
+
+plt.title("FPS Representation")
+plt.plot(fpss)
+plt.show()

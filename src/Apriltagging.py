@@ -61,4 +61,4 @@ class AprilTagging:
         while len(centers) < 2:
             centers.append([0, 0])
 
-        return centers[:2]
+        return centers
