@@ -1,7 +1,7 @@
-python==3.10
-opencv
-pupil-apriltags
 numpy
-scipy
 matplotlib
+scipy
+pupil-apriltags
 bs4
+opencv-python
+keyboard
