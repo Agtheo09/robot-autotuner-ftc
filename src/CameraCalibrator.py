@@ -8,6 +8,7 @@ class CameraCalibrator:
         tagCenters,  # Should be in a form of TopLeft, TopRight, BottomLeft, BottomRight
         frame_size=(1080, 1080),
         padding=20,
+        fish_eye_enabled=False,
     ):
         self.padding = padding
         self.frame_size = frame_size
@@ -23,6 +24,8 @@ class CameraCalibrator:
                 ],
             ]
         )
+
+        self.fish_eye_enabled = fish_eye_enabled
 
         self.updateCorners(
             tagCenters[0], tagCenters[1], tagCenters[2], tagCenters[3]
@@ -47,15 +50,17 @@ class CameraCalibrator:
         return self.fieldTagPositions
 
     def undistortFrame(self, frame):
-        return cv.undistort(frame, self.camera_matrix, self.dist_coeffs)
+        return cv.undistort(frame.copy(), self.camera_matrix, self.dist_coeffs)
 
     def applyCalibrations(self, frame):
-        distorted = frame.copy()
-        # undistorted = self.undistortFrame(distorted)
-        # Perspective Revert
+        rawMat = frame.copy()
+        # Perspective Revert if Enabled
+        inputMat = (
+            self.undistortFrame(rawMat) if self.fish_eye_enabled else rawMat
+        )
+
         return cv.warpPerspective(
-            distorted,
-            # undistorted,
+            inputMat,
             self.perspective_matrix,
             self.frame_size,
         )

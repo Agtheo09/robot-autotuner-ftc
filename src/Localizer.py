@@ -12,14 +12,16 @@ class Localizer:
     deltaTime = 0  # Sec
     deltaPosition = [0, 0]  # Meters
 
-    pixelsPerMeter = 0.0
+    pixelsPerMeter = 0.0  # Normalizing Constant (Pixels/Meter)
 
     # Robot Output
     lastRobotPosition = [1, 1]  # Meters
     robotHeading = 0  # Degrees
     robotVelocity = [0.0, 0.0]  # m/s
 
-    poseMaxErrorAllowed = np.array([0.01, 0.01, 1.0])  # Meters, Meters, Degrees
+    poseMaxErrorAllowed = np.array(
+        [0.005, 0.005, 3.0]
+    )  # Meters, Meters, Degrees
 
     def __init__(
         self,
@@ -31,8 +33,9 @@ class Localizer:
         assert (
             numOfRobotTags == 1 or numOfRobotTags == 2 or numOfRobotTags == -1
         )
+
         self.numOfRobotTags = numOfRobotTags
-        self.tagOffset = tagOffset
+        self.tagOffset = tagOffset  # Millimeters
         self.robotPose = np.array([0.0, 0.0, 0.0])
         self.lastRobotPose = np.array([0.0, 0.0, 0.0])
         self.startingPose = startingPose
@@ -68,22 +71,26 @@ class Localizer:
         self.fieldTagPositions = fieldTagPositions
         TLTag, TRTag = self.fieldTagPositions[:2]  # Top Left, Top Right Tag Pos
 
+        # Configure Normalizing Constant (Pixels/Meter)
         self.pixelsPerMeter = math.dist(TLTag, TRTag) / self.fieldDimension[0]
         self.fieldCenter = self.fieldDimension / 2
 
     def update(self, robotTagPositions):
-        if robotTagPositions[0] is None or robotTagPositions[1] is None:
+        # If no tags are detected, return the last known position
+        if robotTagPositions[0] is None and robotTagPositions[1] is None:
             return self.robotPose
 
+        # Recalculate Robot Position Relative to Top-Left Corner of Field
         robotTagPositions = np.array(
             robotTagPositions - self.fieldTagPositions[0]
         )
 
         if self.numOfRobotTags == 2:
+            # Get the center point of the Line between the 2 Tags of the Robot
             tagMidPoint = np.mean(robotTagPositions, axis=0)
 
             self.robotPose[:2] = (
-                (self.normalize(tagMidPoint) - self.tagOffset / 100)
+                (self.normalize(tagMidPoint) - self.tagOffset / 1000)
                 - self.fieldCenter
             ) * np.array([1, -1])
 

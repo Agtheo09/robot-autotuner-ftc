@@ -10,5 +10,8 @@
         },
         "editor.defaultFormatter": "ms-python.black-formatter"
     },
-    "editor.rulers": [80],
+    "editor.rulers": [
+        80
+    ],
+    "editor.fontFamily": "Fira Code",
 }

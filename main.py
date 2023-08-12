@@ -13,9 +13,10 @@ from src.CameraCalibrator import CameraCalibrator
 from src.VideoStream import VideoStream
 
 if __name__ == "__main__":
-    cap = VideoStream("./imgs/sample-vid.mp4").start()
-
     # Initializing Custom Classes
+    cap = VideoStream("./imgs/sample-vid.mp4").start()  # Starting Video Stream
+    # cap = VideoStream(0).start() # For Webcam
+
     tagDetector = AprilTagging()
     localizer = Localizer(numOfRobotTags=2, tagOffset=np.array([0, 0]))
     datalogger = Datalogger()
@@ -23,8 +24,11 @@ if __name__ == "__main__":
 
     pathCapturerRunning = False
 
+    ############################################################################
+
     frame = cap.read()
 
+    # Detect Corners on Raw Mat
     tagDetector.update(frame)
     fieldTagsCenters = tagDetector.getTagCentersByIds(localizer.fieldTagIds)
 
@@ -32,15 +36,13 @@ if __name__ == "__main__":
         fieldTagsCenters,
         frame_size=(frame.shape[0], frame.shape[0]),
         padding=50,
-    )
+    )  # Calibrating Source
 
     reverted = cam_calibr.applyCalibrations(frame)
 
     localizer.updateFieldTagPositions(cam_calibr.getFieldTagPositions())
 
     tagDetector.update(reverted)
-
-    robotTagPositions = [(0, 0), (0, 0)]
 
     fpss = []
     # while cap.more():
@@ -50,7 +52,7 @@ if __name__ == "__main__":
         if frame is None:
             continue
 
-        # Calibrating Camera
+        # Calibrating Source
         calibrated = cam_calibr.applyCalibrations(frame)
 
         # Detecting Apriltags
@@ -64,14 +66,17 @@ if __name__ == "__main__":
         # Calulate Poses, Velocities etc
         localizer.update(robotTagPositions)
 
+        # Getters from Localizer Class
         robotPose = localizer.getRobotPose()
         robotVelocity = localizer.getRobotCurrentVelocity()
 
         # print(localizer.positioningInstructions())
         # print("Pose: ", np.asarray(robotPose))
 
+        # Adding Step to Path Capturer
         capturer.update(robotPose)
 
+        # Toggle Capturer State
         if keyboard.is_pressed("c"):
             # if not capturer.captureEnabled and localizer.atTheCorrectSpot():
             if not capturer.captureEnabled:
@@ -123,6 +128,7 @@ cap.stop()
 cv.destroyAllWindows()
 print("Average FPS: ", np.mean(fpss))
 
+# Preview a Plot of the FPS Progress
 plt.title("FPS Representation")
 plt.plot(fpss)
 plt.show()
