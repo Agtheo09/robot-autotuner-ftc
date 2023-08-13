@@ -12,9 +12,12 @@ class Visualizer:
     # Log Files Directory
     directory = "./logs"
 
+    HIDE_AXIS = False
+
     def __init__(self):
         self.fileReader = Datalogger()
 
+    # * @param newPoint: Tuple of (x, y, θ)
     def liveVisualize(self, newPoint):
         lenOfHistory = len(self.pointHistory)
         lastX, lastY = self.pointHistory[lenOfHistory - 1]
@@ -39,6 +42,11 @@ class Visualizer:
         # Show the plot
         plt.show()
 
+    # * @param expNames: List of Experiment names
+    # * @param labelNames: List of Labels for the experiments
+    # * @param animate: If True, the animation will be shown
+    # * @param animInterval: Interval between frames in milliseconds
+    # * @param viewPts: If True, the points will be shown
     def visualizeExperiments(
         self,
         expNames,
@@ -105,8 +113,9 @@ class Visualizer:
             ax.spines["right"].set_color("none")
             ax.spines["top"].set_color("none")
 
-            # ax.get_xaxis().set_visible(False)
-            # ax.get_yaxis().set_visible(False)
+            if self.HIDE_AXIS:
+                ax.get_xaxis().set_visible(False)
+                ax.get_yaxis().set_visible(False)
 
             # It works but i dont know how
             def animateNonLive(i):
@@ -130,9 +139,7 @@ class Visualizer:
                 blit=True,
             )
 
-            plt.title("Experiments") if len(expNames) > 1 else plt.title(
-                "Experiment"
-            )
+            plt.title("Experiments" if len(expNames) > 1 else "Experiment")
             plt.show()
         else:
             for i in range(len(xs)):

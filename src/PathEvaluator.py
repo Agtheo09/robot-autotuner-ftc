@@ -18,12 +18,15 @@ class PathEvaluator:
     # Log Files Directory
     directory = "./logs"
 
+    # * @param timestamps: np.array([t1, t2, t3,..., tn])
+    # * @param pathPoints: np.array([[x1, y1, θ1], [x2, y2, θ2], [x3, y3, θ3],... [xn, yn, θn]])
     def __init__(self, timestamps=np.array([]), pathPoints=np.array([])):
         self.pathPoints = pathPoints
         self.timestamps = timestamps
 
         self.datalogger = Datalogger()
 
+    # * @param expName: Name of the experiment
     def updateDataFromLog(self, expName):
         curData = self.datalogger.readCSV(expName)
 
@@ -48,6 +51,7 @@ class PathEvaluator:
 
         self.linearity_index = r_value**2
 
+    # * @param expName: Name of the experiment
     def pathInterpolation(self, expName):
         tempX = self.pathPoints[:, 0]
         tempY = self.pathPoints[:, 1]

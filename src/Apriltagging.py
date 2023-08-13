@@ -16,6 +16,7 @@ class AprilTagging:
         debug=0,
     )
 
+    # * @param frame: frame to process
     def update(self, frame):
         output = frame
         grayscaleImage = cv.cvtColor(output, cv.COLOR_BGR2GRAY)
@@ -49,10 +50,12 @@ class AprilTagging:
 
         return output
 
+    # * @param id: id of the tag to get the center of
     def getTagCenterById(self, id):
         filteredArr = list(filter(lambda x: x.tag_id == id, self.tagsDetected))
         return filteredArr[0].center if filteredArr else None
 
+    # * @param ids: list of ids of the tags to get the centers of
     def getTagCentersByIds(self, ids):
         detectedTags = list(
             filter(lambda x: x.tag_id in set(ids), self.tagsDetected)

@@ -3,6 +3,10 @@ import numpy as np
 
 
 class CameraCalibrator:
+    # * @param tagCenters: Tag Center Positions(px) in the form of [TopLeft, TopRight, BottomLeft, BottomRight]
+    # * @param frame_size: Should be in the same ratio as the tags placed in the field
+    # * @param padding: The padding between the tags and the frame(>= 20)
+    # * @param fish_eye_enabled: If enabled, the frame will be undistorted using the fish-eye parameters
     def __init__(
         self,
         tagCenters,  # Should be in a form of TopLeft, TopRight, BottomLeft, BottomRight
@@ -34,6 +38,10 @@ class CameraCalibrator:
         # self.camera_matrix = np.load("camera_matrix.npy")
         # self.dist_coeffs = np.load("distortion_coeffs.npy")
 
+    # * @param topLeft: Top Left Tag Positions
+    # * @param topRight: Top Right Tag Positions
+    # * @param bottomLeft: Bottom Left Tag Positions
+    # * @param bottomRight: Bottom Right Tag Positions
     def updateCorners(self, topLeft, topRight, bottomLeft, bottomRight):
         self.topLeft = topLeft
         self.topRight = topRight
@@ -49,9 +57,11 @@ class CameraCalibrator:
     def getFieldTagPositions(self):
         return self.fieldTagPositions
 
+    # * @param frame: Frame to be undistorted(fish-eye)
     def undistortFrame(self, frame):
         return cv.undistort(frame.copy(), self.camera_matrix, self.dist_coeffs)
 
+    # * @param frame: Frame to be undistorted(perspective+fish-eye)
     def applyCalibrations(self, frame):
         rawMat = frame.copy()
         # Perspective Revert if Enabled

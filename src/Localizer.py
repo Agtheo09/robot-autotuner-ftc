@@ -10,7 +10,7 @@ class Localizer:
     time1 = 0  # Sec
     time2 = 0  # Sec
     deltaTime = 0  # Sec
-    deltaPosition = [0, 0]  # Meters
+    deltaPosition = [0, 0]  # Meters X,Y
 
     pixelsPerMeter = 0.0  # Normalizing Constant (Pixels/Meter)
 
@@ -19,10 +19,12 @@ class Localizer:
     robotHeading = 0  # Degrees
     robotVelocity = [0.0, 0.0]  # m/s
 
-    poseMaxErrorAllowed = np.array(
-        [0.005, 0.005, 3.0]
-    )  # Meters, Meters, Degrees
+    poseMaxErrorAllowed = np.array([0.01, 0.01, 3.0])  # Meters, Meters, Degrees
 
+    # * @param numOfRobotTags: Number of Tags the Robot is using
+    # * @param tagOffset: Offset of the Tags from the center of the Robot
+    # * @param startingPose: Starting Pose of the Robot
+    # * @param viewportSize: Size of the Viewport(after calibration)
     def __init__(
         self,
         numOfRobotTags=-1,
@@ -64,9 +66,11 @@ class Localizer:
                 constants["tags"]["robot"]["right"],
             ]
 
+    # * @param value: Value to be normalized
     def normalize(self, value):
         return value / self.pixelsPerMeter
 
+    # * @param fieldTagPositions: List of the 4 Tags' Position on the field[topLeft, topRight, bottomLeft, bottomRight]
     def updateFieldTagPositions(self, fieldTagPositions):
         self.fieldTagPositions = fieldTagPositions
         TLTag, TRTag = self.fieldTagPositions[:2]  # Top Left, Top Right Tag Pos
@@ -75,6 +79,7 @@ class Localizer:
         self.pixelsPerMeter = math.dist(TLTag, TRTag) / self.fieldDimension[0]
         self.fieldCenter = self.fieldDimension / 2
 
+    # * @param robotTagPositions: List of the 2 Tags' Position on the robot[left, right]
     def update(self, robotTagPositions):
         # If no tags are detected, return the last known position
         if robotTagPositions[0] is None and robotTagPositions[1] is None:

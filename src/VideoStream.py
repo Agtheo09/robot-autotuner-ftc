@@ -5,14 +5,16 @@ import time
 
 
 class VideoStream:
-    def __init__(self, path, queueSize=20):
+    # * @param path: path to the video file or index of video source(camera 0 by default)
+    # * @param queueSize: max queue size
+    def __init__(self, path=0, queueSize=20):
         self.stream = cv.VideoCapture(path)
         self.stopped = False
         self.Q = Queue(maxsize=queueSize)
 
     def start(self):
         self.t = Thread(target=self.update, args=())
-        # t.daemon = True
+
         self.t.start()
         return self
 
@@ -34,7 +36,7 @@ class VideoStream:
         return self.Q.get()
 
     def more(self):
-        return self.Q.qsize() > 0
+        return self.Q.qsize() >= 1
 
     def stop(self):
         self.stopped = True

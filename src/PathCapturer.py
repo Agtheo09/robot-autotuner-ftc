@@ -17,12 +17,14 @@ class PathCapturer:
     datalogger = Datalogger()
     visualizer = Visualizer()
 
-    def __init__(self, experimentName):
+    # * @param experimentName: Name of the experiment
+    def __init__(self, experimentName="Experiment"):
         self.experimentName = experimentName
 
     def addPoint(self, pose):
         self.timestamp = time() - self.expStartingTime
 
+        # Combine Timestamp and Pose to make a row
         row = np.concatenate((np.array([self.timestamp]), pose.copy()))
 
         self.rows.append(row)
@@ -30,19 +32,30 @@ class PathCapturer:
         self.path.append(pose[:2])
 
     def startCapturing(self):
+        # Reset Meter
         self.path = []
         self.rows = []
-        self.captureEnabled = True
         self.expStartingTime = time()
 
+        # Toggle State Machine
+        self.captureEnabled = True
+
     def stopCapturing(self):
+        # Toggle State Machine
         self.captureEnabled = False
+
+        # Save Experiment
         dateCode = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
         fileName = f"{self.experimentName}_{dateCode}"
         self.datalogger.saveExpFile(fileName, self.rows)
+
+        # Visualize Experiment
         self.visualizer.visualizeExperiments([fileName])
+
+        # Reset Meter
         self.path = []
 
+    # * @param pose: New Pose that is added to the sequence(x, y, theta)
     def update(self, pose):
         if self.captureEnabled:
             self.addPoint(pose)
