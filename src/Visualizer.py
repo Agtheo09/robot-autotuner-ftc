@@ -7,15 +7,28 @@ from .Datalogger import Datalogger
 class Visualizer:
     pointHistory = []
 
-    fieldDimension = (3.6, 3.6)
-
     # Log Files Directory
     directory = "./logs"
 
     HIDE_AXIS = False
 
-    def __init__(self):
+    plot_colors = [
+        "blue",
+        "orange",
+        "green",
+        "red",
+        "purple",
+        "brown",
+        "pink",
+        "gray",
+        "olive",
+        "cyan",
+    ]
+
+    # * @param fieldDim: Tuple of (x, y) dimenssion
+    def __init__(self, fieldDim=(3.6, 3.6)):
         self.fileReader = Datalogger()
+        self.fieldDimension = fieldDim
 
     # * @param newPoint: Tuple of (x, y, θ)
     def liveVisualize(self, newPoint):
@@ -75,7 +88,7 @@ class Visualizer:
         max_length = max(len(sublist) for sublist in xs)
 
         if labelNames == None:
-            for i in range(n):
+            for i in range(1, n + 1):
                 pathNames.append(f"Path {i}")
         else:
             pathNames = labelNames
@@ -84,18 +97,23 @@ class Visualizer:
             fig, ax = plt.subplots()
 
             lines = [
-                ax.plot([], [], color="green", linewidth=2, zorder=5)[0]
+                ax.plot(
+                    [],
+                    [],
+                    color=self.plot_colors[i],
+                    linewidth=2,
+                    zorder=i + 2,
+                    label=pathNames[i],
+                )[0]
                 for i in range(n)
             ]
             scats = [
-                ax.scatter([], [], marker=" ", color="yellow", zorder=10)
+                ax.scatter([], [], marker=" ", color="yellow", zorder=15)
                 for i in range(n)
             ]
 
             padding = 0
 
-            # ax.set_xlim(padding, self.fieldDimension + padding)
-            # ax.set_ylim(padding, self.fieldDimension + padding)
             ax.set_xlim(
                 -self.fieldDimension[0] - padding,
                 self.fieldDimension[0] + padding,
@@ -140,6 +158,7 @@ class Visualizer:
             )
 
             plt.title("Experiments" if len(expNames) > 1 else "Experiment")
+            plt.legend()
             plt.show()
         else:
             for i in range(len(xs)):

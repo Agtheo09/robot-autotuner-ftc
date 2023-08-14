@@ -27,7 +27,7 @@ class PathEvaluator:
         self.datalogger = Datalogger()
 
     # * @param expName: Name of the experiment
-    def updateDataFromLog(self, expName):
+    def updateDataFromLogFile(self, expName):
         curData = self.datalogger.readCSV(expName)
 
         tempTimeStamps = []
@@ -52,11 +52,13 @@ class PathEvaluator:
         self.linearity_index = r_value**2
 
     # * @param expName: Name of the experiment
-    def pathInterpolation(self, expName):
+    def pathInterpolation(self, expName, resolution=100):
         tempX = self.pathPoints[:, 0]
         tempY = self.pathPoints[:, 1]
 
-        t_new = np.linspace(min(self.timestamps), max(self.timestamps), 100)
+        t_new = np.linspace(
+            min(self.timestamps), max(self.timestamps), resolution
+        )
 
         f1 = interp1d(self.timestamps, tempX, kind="cubic")
         f2 = interp1d(self.timestamps, tempY, kind="cubic")

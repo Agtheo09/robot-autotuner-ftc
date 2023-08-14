@@ -1,14 +1,17 @@
-import numpy as np
-from enum import Enum
+from src.PathEvaluator import PathEvaluator
+from src.Datalogger import Datalogger
+from src.Visualizer import Visualizer
 
+pathEval = PathEvaluator()
+datalogger = Datalogger()
+visualizer = Visualizer()
 
-class DistUnit(Enum):
-    METERS = 1
-    CENTIMETERS = 100
-    FEET = 3.2808399
-    INCHES = 39.3700787
+pathEval.updateDataFromLogFile("Experiment_20230814161953810")
 
+pathEval.pathInterpolation("Interpolation1", 200)
 
-class AngleUnit(Enum):
-    RADIANS = 1
-    DEGREES = 57.29577951308232
+visualizer.visualizeExperiments(
+    ["Experiment_20230814161953810", "Interpolation1"],
+    ["Raw", "Interpolated"],
+    viewPts=True,
+)

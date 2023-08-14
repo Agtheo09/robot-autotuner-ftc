@@ -44,9 +44,6 @@ class CameraCalibrator:
         # self.camera_matrix = np.load("camera_matrix.npy")
         # self.dist_coeffs = np.load("distortion_coeffs.npy")
 
-    # # Update Localizer with new Data of the Corners
-    # localizer.updateFieldTagPositions(cam_calibr.getFieldTagPositions())
-
     # * @param topLeft: Top Left Tag Positions
     # * @param topRight: Top Right Tag Positions
     # * @param bottomLeft: Bottom Left Tag Positions
