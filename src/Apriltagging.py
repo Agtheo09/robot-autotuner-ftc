@@ -1,7 +1,7 @@
 import cv2 as cv
 from pupil_apriltags import Detector
 
-PLOT_APRIL_TAGS = False
+PLOT_APRIL_TAGS = True
 
 
 class AprilTagging:
@@ -18,7 +18,7 @@ class AprilTagging:
 
     # * @param frame: frame to process
     def update(self, frame):
-        output = frame
+        output = frame.copy()
         grayscaleImage = cv.cvtColor(output, cv.COLOR_BGR2GRAY)
         self.tagsDetected = self.detector.detect(grayscaleImage)
 
@@ -36,6 +36,8 @@ class AprilTagging:
                 cv.line(output, ptB, ptC, (255, 0, 0), 2)
                 cv.line(output, ptC, ptD, (255, 0, 0), 2)
                 cv.line(output, ptD, ptA, (255, 0, 0), 2)
+
+                cv.circle(output, tag.center.astype(int), 5, (255, 0, 0), -1)
 
                 cv.putText(
                     output,

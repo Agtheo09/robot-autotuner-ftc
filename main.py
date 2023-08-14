@@ -17,12 +17,16 @@ if __name__ == "__main__":
     cap = VideoStream("./imgs/sample-vid.mp4").start()  # Starting Video Stream
     # cap = VideoStream(0).start() # For Webcam
 
+    # Classes
     tagDetector = AprilTagging()
     localizer = Localizer(numOfRobotTags=2, tagOffset=np.array([0, 0]))
     datalogger = Datalogger()
     capturer = PathCapturer("Experiment")
 
     pathCapturerRunning = False
+    NAV_LINES_ENABLED = True
+    np.set_printoptions(formatter={"float": lambda x: "{0:0.3f}".format(x)})
+    fpss = []  # List of FPSs
 
     ############################################################################
 
@@ -32,23 +36,23 @@ if __name__ == "__main__":
     tagDetector.update(frame)
     fieldTagsCenters = tagDetector.getTagCentersByIds(localizer.fieldTagIds)
 
+    # Calibrate Source
+    viewportSide = frame.shape[0]
     cam_calibr = CameraCalibrator(
         fieldTagsCenters,
-        frame_size=(frame.shape[0], frame.shape[0]),
+        frame_size=(viewportSide, viewportSide),
         padding=50,
-    )  # Calibrating Source
-
+    )
     reverted = cam_calibr.applyCalibrations(frame)
 
+    # Update Localizer with new Data of the Corners
     localizer.updateFieldTagPositions(cam_calibr.getFieldTagPositions())
 
-    tagDetector.update(reverted)
-
-    fpss = []
-    # while cap.more():
-    while True:
+    while cap.more():
         start_time = time.time()
         frame = cap.read()
+
+        # If frame in not available skip this iteration
         if frame is None:
             continue
 
@@ -70,15 +74,13 @@ if __name__ == "__main__":
         robotPose = localizer.getRobotPose()
         robotVelocity = localizer.getRobotCurrentVelocity()
 
-        # print(localizer.positioningInstructions())
-        # print("Pose: ", np.asarray(robotPose))
+        print(f"Pose: {robotPose}, Velocity: {robotVelocity}")
 
         # Adding Step to Path Capturer
         capturer.update(robotPose)
 
         # Toggle Capturer State
         if keyboard.is_pressed("c"):
-            # if not capturer.captureEnabled and localizer.atTheCorrectSpot():
             if not capturer.captureEnabled:
                 capturer.startCapturing()
         if keyboard.is_pressed("v"):
@@ -90,8 +92,7 @@ if __name__ == "__main__":
         fps = 1 / dt
         fpss.append(fps)
 
-        # Preview FPS
-        print("Current FPS: ", fps)
+        # Preview FPS and Capturer State
         cv.putText(
             detectedMat,
             f"FPS: {fps:.0f} | Capturer State: {'Capturing' if capturer.captureEnabled else 'Not Capturing'}",
@@ -101,6 +102,46 @@ if __name__ == "__main__":
             (255, 255, 0),
             2,
             cv.LINE_AA,
+        )
+
+        rawRobotPos = np.mean(np.array(robotTagPositions), axis=0).astype(int)
+
+        if NAV_LINES_ENABLED:
+            cv.line(
+                detectedMat,
+                rawRobotPos,
+                (rawRobotPos[0], 0),
+                (0, 255, 0),
+                2,
+            )
+            cv.line(
+                detectedMat,
+                rawRobotPos,
+                (viewportSide, rawRobotPos[1]),
+                (0, 255, 0),
+                2,
+            )
+            cv.line(
+                detectedMat,
+                rawRobotPos,
+                (rawRobotPos[0], viewportSide),
+                (0, 255, 0),
+                2,
+            )
+            cv.line(
+                detectedMat,
+                rawRobotPos,
+                (0, rawRobotPos[1]),
+                (0, 255, 0),
+                2,
+            )
+
+        cv.circle(
+            detectedMat,
+            tuple(rawRobotPos),
+            10,
+            (255, 0, 0),
+            2,
         )
 
         # Save FPSs
@@ -124,11 +165,18 @@ if __name__ == "__main__":
             break
 
 cap.stop()
-# cap.release()
 cv.destroyAllWindows()
 print("Average FPS: ", np.mean(fpss))
 
 # Preview a Plot of the FPS Progress
 plt.title("FPS Representation")
-plt.plot(fpss)
+samples = np.linspace(1, len(fpss), len(fpss))
+
+plt.plot(samples, fpss, label="FPS")
+plt.plot(samples, [np.mean(fpss)] * len(fpss), label="Average FPS")
+plt.legend()
+
+plt.xlabel("Sample No")
+plt.ylabel("FPS")
+plt.grid(True)
 plt.show()

@@ -79,23 +79,24 @@ class Localizer:
         self.pixelsPerMeter = math.dist(TLTag, TRTag) / self.fieldDimension[0]
         self.fieldCenter = self.fieldDimension / 2
 
-    # * @param robotTagPositions: List of the 2 Tags' Position on the robot[left, right]
+    # * @param robotTagPositions: List of the 1-2 Tags' Position on the robot[left, right]
     def update(self, robotTagPositions):
+        # TODO Fix Statement(arrays are 0 by default not None)
         # If no tags are detected, return the last known position
         if robotTagPositions[0] is None and robotTagPositions[1] is None:
             return self.robotPose
 
         # Recalculate Robot Position Relative to Top-Left Corner of Field
-        robotTagPositions = np.array(
+        self.robotTagPositions = np.array(
             robotTagPositions - self.fieldTagPositions[0]
         )
 
         if self.numOfRobotTags == 2:
             # Get the center point of the Line between the 2 Tags of the Robot
-            tagMidPoint = np.mean(robotTagPositions, axis=0)
+            self.tagMidPoint = np.mean(self.robotTagPositions, axis=0)
 
             self.robotPose[:2] = (
-                (self.normalize(tagMidPoint) - self.tagOffset / 1000)
+                (self.normalize(self.tagMidPoint) - self.tagOffset / 1000)
                 - self.fieldCenter
             ) * np.array([1, -1])
 
@@ -124,13 +125,17 @@ class Localizer:
 
         self.calculateRobotVelocity()
 
-        self.lastRobotPose = self.robotPose
+        self.lastRobotPose = self.robotPose.copy()
         self.time1 = time.time()
 
     def calculateRobotVelocity(self):
         self.deltaPosition = (self.robotPose - self.lastRobotPose)[:2]
         self.deltaTime = self.time2 - self.time1
         self.robotVelocity = self.deltaPosition / self.deltaTime
+
+    def getRobotRawPosition(self):
+        return self.tagMidPoint.astype(int)
+        # return self.robotTagPositions[0].astype(int)
 
     def getRobotPosition(self):
         return self.robotPose[:2]
@@ -154,3 +159,6 @@ class Localizer:
         return (
             "Ready" if self.atTheCorrectSpot() else str(self.placementOffset())
         )
+
+    def getNormalizingFactor(self):
+        return self.pixelsPerMeter
