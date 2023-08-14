@@ -13,6 +13,7 @@ class CameraCalibrator:
         frame_size=(1080, 1080),
         padding=20,
         fish_eye_enabled=False,
+        localizer=None,
     ):
         self.padding = padding
         self.frame_size = frame_size
@@ -30,13 +31,21 @@ class CameraCalibrator:
         )
 
         self.fish_eye_enabled = fish_eye_enabled
+        self.localizer = localizer
 
         self.updateCorners(
             tagCenters[0], tagCenters[1], tagCenters[2], tagCenters[3]
         )
+
+        # Update Localizer with new Data of the Corners
+        self.localizer.updateFieldTagPositions(self.getFieldTagPositions())
+
         # Load the fish-eye distortion parameters
         # self.camera_matrix = np.load("camera_matrix.npy")
         # self.dist_coeffs = np.load("distortion_coeffs.npy")
+
+    # # Update Localizer with new Data of the Corners
+    # localizer.updateFieldTagPositions(cam_calibr.getFieldTagPositions())
 
     # * @param topLeft: Top Left Tag Positions
     # * @param topRight: Top Right Tag Positions

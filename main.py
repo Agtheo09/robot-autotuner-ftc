@@ -14,7 +14,8 @@ from src.VideoStream import VideoStream
 from src.Units import DistUnit, AngleUnit
 
 if __name__ == "__main__":
-    # Initializing Custom Classes
+    ##--------------- Initializing Custom Classes & Utilities ----------------##
+
     cap = VideoStream("./imgs/sample-vid.mp4").start()  # Starting Video Stream
     # cap = VideoStream(0).start() # For Webcam
 
@@ -31,15 +32,14 @@ if __name__ == "__main__":
 
     # Utils
     pathCapturerRunning = False
-    NAV_LINES_ENABLED = True
+    GRAPHICS_ENABLED = True
     np.set_printoptions(formatter={"float": lambda x: "{0:0.3f}".format(x)})
     fpss = []  # List of FPSs
 
-    ############################################################################
+    ##------------------------ Initialize Environment ------------------------##
 
     frame = cap.read()
-
-    # Detect Corners on Raw Mat
+    # Detect Corners on Raw Mat and Get Centers
     tagDetector.update(frame)
     fieldTagsCenters = tagDetector.getTagCentersByIds(localizer.fieldTagIds)
 
@@ -49,12 +49,11 @@ if __name__ == "__main__":
         fieldTagsCenters,
         frame_size=(viewportSide, viewportSide),
         padding=50,
+        localizer=localizer,
     )
     reverted = cam_calibr.applyCalibrations(frame)
 
-    # Update Localizer with new Data of the Corners
-    localizer.updateFieldTagPositions(cam_calibr.getFieldTagPositions())
-
+    ##-------------------------- Main Program/Loop ---------------------------##
     while cap.more():
         start_time = time.time()
         frame = cap.read()
@@ -113,50 +112,39 @@ if __name__ == "__main__":
 
         rawRobotPos = np.mean(np.array(robotTagPositions), axis=0).astype(int)
 
-        if NAV_LINES_ENABLED:
+        if GRAPHICS_ENABLED:
             cv.line(
                 detectedMat,
                 rawRobotPos,
                 (rawRobotPos[0], 0),
-                (0, 255, 0),
+                (255, 0, 0),
                 2,
             )
             cv.line(
                 detectedMat,
                 rawRobotPos,
                 (viewportSide, rawRobotPos[1]),
-                (0, 255, 0),
+                (255, 0, 0),
                 2,
             )
             cv.line(
                 detectedMat,
                 rawRobotPos,
                 (rawRobotPos[0], viewportSide),
-                (0, 255, 0),
+                (255, 0, 0),
                 2,
             )
             cv.line(
                 detectedMat,
                 rawRobotPos,
                 (0, rawRobotPos[1]),
-                (0, 255, 0),
+                (255, 0, 0),
                 2,
             )
 
-        cv.circle(
-            detectedMat,
-            tuple(rawRobotPos),
-            10,
-            (255, 0, 0),
-            2,
-        )
-
-        # Save FPSs
+            cv.circle(detectedMat, tuple(rawRobotPos), 6, (0, 0, 255), -1)
 
         # Show Mats
-        # cv.imshow("Raw", cv.resize(frame, (720, 720)))
-        # cv.imshow("Proccessed", cv.resize(detectedMat, (700, 700)))
-
         cv.imshow(
             "MultiView",
             np.concatenate(
@@ -173,12 +161,12 @@ if __name__ == "__main__":
 
 cap.stop()
 cv.destroyAllWindows()
-print("Average FPS: ", np.mean(fpss))
 
-# Preview a Plot of the FPS Progress
+##-------------------- Preview a Plot of the FPS Progress --------------------##
 plt.title("FPS Representation")
 samples = np.linspace(1, len(fpss), len(fpss))
 
+print("Average FPS: ", np.mean(fpss))
 plt.plot(samples, fpss, label="FPS")
 plt.plot(samples, [np.mean(fpss)] * len(fpss), label="Average FPS")
 plt.legend()
