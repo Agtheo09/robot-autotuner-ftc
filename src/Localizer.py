@@ -4,6 +4,8 @@ import time
 import json
 import numpy as np
 
+from src.Units import DistUnit, AngleUnit
+
 
 class Localizer:
     # Util
@@ -31,6 +33,8 @@ class Localizer:
         tagOffset=np.array([0, 0]),
         startingPose=np.array([0.0, 0.0, 0.0]),
         viewportSize=(1080, 1080),
+        distUnit=DistUnit.M,
+        angleUnit=AngleUnit.DEG,
     ):
         assert (
             numOfRobotTags == 1 or numOfRobotTags == 2 or numOfRobotTags == -1
@@ -42,6 +46,9 @@ class Localizer:
         self.lastRobotPose = np.array([0.0, 0.0, 0.0])
         self.startingPose = startingPose
         self.viewportSize = viewportSize
+        self.distUnit = distUnit
+        self.angleUnit = angleUnit
+
         np.set_printoptions(suppress=True)
 
         # Get Constants
@@ -76,6 +83,7 @@ class Localizer:
         TLTag, TRTag = self.fieldTagPositions[:2]  # Top Left, Top Right Tag Pos
 
         # Configure Normalizing Constant (Pixels/Meter)
+        # ! Meters(this unit is independent from the output)
         self.pixelsPerMeter = math.dist(TLTag, TRTag) / self.fieldDimension[0]
         self.fieldCenter = self.fieldDimension / 2
 
@@ -96,9 +104,13 @@ class Localizer:
             self.tagMidPoint = np.mean(self.robotTagPositions, axis=0)
 
             self.robotPose[:2] = (
-                (self.normalize(self.tagMidPoint) - self.tagOffset / 1000)
-                - self.fieldCenter
-            ) * np.array([1, -1])
+                (
+                    (self.normalize(self.tagMidPoint) - self.tagOffset / 1000)
+                    - self.fieldCenter
+                )
+                * np.array([1, -1])
+                * self.distUnit.value
+            )
 
             """ Above, we substract the center of the field in order to set the 
             center of the field as the origin. Then we multiply by [1, -1] in 
@@ -109,11 +121,12 @@ class Localizer:
             #            /  y2 - y1  \
             # θ = arctan| ---------- |
             #           \   x2 - x1 /
-            self.robotPose[2] = math.degrees(
+            self.robotPose[2] = (
                 math.atan2(
                     robotTagPositions[0][1] - robotTagPositions[1][1],
                     robotTagPositions[1][0] - robotTagPositions[0][0],
                 )
+                * self.angleUnit.value
             )
         elif self.numOfRobotTags == 1:
             self.robotPose[:2] = (

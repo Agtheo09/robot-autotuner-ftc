@@ -11,18 +11,25 @@ from src.PathCapturer import PathCapturer
 from src.Datalogger import Datalogger
 from src.CameraCalibrator import CameraCalibrator
 from src.VideoStream import VideoStream
+from src.Units import DistUnit, AngleUnit
 
 if __name__ == "__main__":
     # Initializing Custom Classes
     cap = VideoStream("./imgs/sample-vid.mp4").start()  # Starting Video Stream
     # cap = VideoStream(0).start() # For Webcam
 
-    # Classes
+    # Custom Classes
     tagDetector = AprilTagging()
-    localizer = Localizer(numOfRobotTags=2, tagOffset=np.array([0, 0]))
+    localizer = Localizer(
+        numOfRobotTags=2,
+        tagOffset=np.array([0, 0]),
+        distUnit=DistUnit.M,
+        angleUnit=AngleUnit.DEG,
+    )
     datalogger = Datalogger()
     capturer = PathCapturer("Experiment")
 
+    # Utils
     pathCapturerRunning = False
     NAV_LINES_ENABLED = True
     np.set_printoptions(formatter={"float": lambda x: "{0:0.3f}".format(x)})
