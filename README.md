@@ -89,5 +89,8 @@ In order to keep the code simple and organized the whole program is divided in c
 ## D.1 File Structure 
 The Project/File Structure looks something like this:
 
+# E. Project Documentation
+The Documentation is in a separate Markdown and you can find it <a href="https://github.com/theinventors-ftc/robot-autotuner/blob/main/DOCS.md" target="_blank">here</a>
+
 
 
