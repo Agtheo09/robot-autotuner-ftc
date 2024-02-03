@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
     # Utils
     pathCapturerRunning = False
-    GRAPHICS_ENABLED = True
+    GRAPHICS_ENABLED = False
     np.set_printoptions(formatter={"float": lambda x: "{0:0.3f}".format(x)})
     fpss = []  # List of FPSs
 
@@ -69,9 +69,7 @@ if __name__ == "__main__":
         detectedMat = tagDetector.update(calibrated)
 
         # Update Tag Positions
-        robotTagPositions = tagDetector.getTagCentersByIds(
-            localizer.robotTagIds
-        )
+        robotTagPositions = tagDetector.getTagCentersByIds(localizer.robotTagIds)
 
         # Calulate Poses, Velocities etc
         localizer.update(robotTagPositions)
@@ -110,6 +108,7 @@ if __name__ == "__main__":
             cv.LINE_AA,
         )
 
+        # Graphics
         rawRobotPos = np.mean(np.array(robotTagPositions), axis=0).astype(int)
 
         if GRAPHICS_ENABLED:
@@ -159,6 +158,7 @@ if __name__ == "__main__":
         if cv.waitKey(1) & 0xFF == 27:
             break
 
+##---------------------- Stop Capturing & Close Windows ----------------------##
 cap.stop()
 cv.destroyAllWindows()
 

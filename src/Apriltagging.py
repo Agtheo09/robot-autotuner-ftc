@@ -59,9 +59,7 @@ class AprilTagging:
 
     # * @param ids: list of ids of the tags to get the centers of
     def getTagCentersByIds(self, ids):
-        detectedTags = list(
-            filter(lambda x: x.tag_id in set(ids), self.tagsDetected)
-        )
+        detectedTags = list(filter(lambda x: x.tag_id in set(ids), self.tagsDetected))
         centers = [tag.center for tag in detectedTags]
         while len(centers) < 2:
             centers.append([0, 0])
